@@ -72,7 +72,13 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
-    const user: User = { ...insertUser, id, stripeCustomerId: null, stripeSubscriptionId: null };
+    const user: User = { 
+      ...insertUser, 
+      id, 
+      email: insertUser.email || null,
+      stripeCustomerId: null, 
+      stripeSubscriptionId: null 
+    };
     this.users.set(id, user);
     return user;
   }
@@ -90,6 +96,9 @@ export class MemStorage implements IStorage {
     const newOrder: Order = {
       ...order,
       id,
+      status: order.status || "pending",
+      userId: order.userId || null,
+      stripePaymentIntentId: order.stripePaymentIntentId || null,
       createdAt: new Date().toISOString(),
     };
     this.orders.set(id, newOrder);
