@@ -54,7 +54,7 @@ export default function Home() {
                 <Button
                   variant="outline"
                   onClick={() => setLocation("/about")}
-                  className="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-primary"
+                  className="border-2 border-white text-secondary px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-primary"
                   data-testid="button-learn-more"
                 >
                   Learn More
