@@ -25,7 +25,7 @@ function Router() {
   return (
     <div className="min-h-screen flex flex-col">
       <Navigation onCartOpen={() => setIsCartOpen(true)} />
-      
+
       <main className="flex-1">
         <Switch>
           <Route path="/" component={Home} />
@@ -36,13 +36,10 @@ function Router() {
           <Route component={NotFound} />
         </Switch>
       </main>
-      
+
       <Footer />
-      
-      <CartDrawer
-        isOpen={isCartOpen}
-        onClose={() => setIsCartOpen(false)}
-      />
+
+      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </div>
   );
 }

@@ -1,18 +1,26 @@
-import { type User, type InsertUser, type Product, type Order, type InsertOrder, type OrderItem, type InsertOrderItem } from "@shared/schema";
+import {
+  type User,
+  type InsertUser,
+  type Product,
+  type Order,
+  type InsertOrder,
+  type OrderItem,
+  type InsertOrderItem,
+} from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  
+
   getProducts(): Promise<Product[]>;
   getProduct(id: string): Promise<Product | undefined>;
-  
+
   createOrder(order: InsertOrder): Promise<Order>;
   getOrder(id: string): Promise<Order | undefined>;
   updateOrderStatus(id: string, status: string): Promise<void>;
-  
+
   createOrderItem(orderItem: InsertOrderItem): Promise<OrderItem>;
   getOrderItems(orderId: string): Promise<OrderItem[]>;
 }
@@ -28,7 +36,7 @@ export class MemStorage implements IStorage {
     this.products = new Map();
     this.orders = new Map();
     this.orderItems = new Map();
-    
+
     // Initialize with sample products
     this.initializeProducts();
   }
@@ -38,24 +46,28 @@ export class MemStorage implements IStorage {
       {
         id: "premium-dog-food",
         name: "Premium Dog Food",
-        description: "High-quality nutrition for adult dogs with real chicken as the first ingredient. Supports healthy digestion and shiny coat.",
+        description:
+          "High-quality nutrition for adult dogs with real chicken as the first ingredient. Supports healthy digestion and shiny coat.",
         price: "29.99",
-        image: "https://images.unsplash.com/photo-1589924691995-400dc9ecc119?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=500",
+        image:
+          "https://images.unsplash.com/photo-1589924691995-400dc9ecc119?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=500",
         category: "Food",
         inStock: 50,
       },
       {
         id: "cat-toy-set",
         name: "Interactive Cat Toy Set",
-        description: "Keep your feline friend entertained for hours with this engaging toy collection. Includes feather wands, balls, and mice.",
+        description:
+          "Keep your feline friend entertained for hours with this engaging toy collection. Includes feather wands, balls, and mice.",
         price: "19.99",
-        image: "https://images.unsplash.com/photo-1574144611937-0df059b5ef3e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=500",
+        image:
+          "https://images.unsplash.com/photo-1574144611937-0df059b5ef3e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=500",
         category: "Toys",
         inStock: 30,
-      }
+      },
     ];
 
-    sampleProducts.forEach(product => {
+    sampleProducts.forEach((product) => {
       this.products.set(product.id, product);
     });
   }
@@ -66,18 +78,18 @@ export class MemStorage implements IStorage {
 
   async getUserByUsername(username: string): Promise<User | undefined> {
     return Array.from(this.users.values()).find(
-      (user) => user.username === username,
+      (user) => user.username === username
     );
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
-    const user: User = { 
-      ...insertUser, 
-      id, 
+    const user: User = {
+      ...insertUser,
+      id,
       email: insertUser.email || null,
-      stripeCustomerId: null, 
-      stripeSubscriptionId: null 
+      stripeCustomerId: null,
+      stripeSubscriptionId: null,
     };
     this.users.set(id, user);
     return user;

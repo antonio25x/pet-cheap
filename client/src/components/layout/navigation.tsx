@@ -27,11 +27,15 @@ export default function Navigation({ onCartOpen }: NavigationProps) {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2" data-testid="link-home">
+          <Link
+            href="/"
+            className="flex items-center space-x-2"
+            data-testid="link-home"
+          >
             <span className="text-2xl">🐾</span>
             <span className="text-xl font-bold text-primary">Pet Cheap</span>
           </Link>
-          
+
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             {navigation.map((item) => (
@@ -47,7 +51,7 @@ export default function Navigation({ onCartOpen }: NavigationProps) {
               </Link>
             ))}
           </div>
-          
+
           {/* Cart and Mobile Menu */}
           <div className="flex items-center space-x-4">
             <Button
@@ -64,7 +68,7 @@ export default function Navigation({ onCartOpen }: NavigationProps) {
                 </span>
               )}
             </Button>
-            
+
             {/* Mobile Menu Button */}
             <Button
               variant="ghost"
@@ -73,11 +77,15 @@ export default function Navigation({ onCartOpen }: NavigationProps) {
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               data-testid="button-mobile-menu"
             >
-              {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              {isMobileMenuOpen ? (
+                <X className="h-5 w-5" />
+              ) : (
+                <Menu className="h-5 w-5" />
+              )}
             </Button>
           </div>
         </div>
-        
+
         {/* Mobile Navigation */}
         {isMobileMenuOpen && (
           <div className="md:hidden border-t border-border">
