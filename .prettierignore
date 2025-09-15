@@ -1,0 +1,10 @@
+# Ignore all CSS files
+*.css
+
+# Ignore other file types if needed
+*.scss
+*.less
+
+# You can also ignore folders
+build/
+dist/

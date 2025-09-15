@@ -44,6 +44,30 @@ server/
 shared/
   schema.ts        # Shared type definitions
 ```
+## 🧹 Code Formatting with Prettier
+
+This project uses [Prettier](https://prettier.io/) for code formatting. To format your code, make sure Prettier is installed:
+
+```sh
+npm install --save-dev prettier
+```
+
+### Format the whole project
+```sh
+npx prettier --write .
+```
+
+### Format a specific file
+```sh
+npx prettier --write path/to/file.js
+```
+
+### Format a specific folder
+```sh
+npx prettier --write path/to/folder/
+```
+
+Prettier will automatically ignore files and folders listed in `.prettierignore`.
 
 ---
 
