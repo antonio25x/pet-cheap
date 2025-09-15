@@ -5,7 +5,11 @@ import { storage } from "./storage";
 import { z } from "zod";
 
 if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
+  throw new Error("Missing required Stripe secret: STRIPE_SECRET_KEY");
+}
+
+if (!process.env.VITE_STRIPE_PUBLIC_KEY) {
+  throw new Error("Missing required Stripe public: VITE_STRIPE_PUBLIC_KEY");
 }
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
@@ -14,10 +18,12 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 
 const createPaymentIntentSchema = z.object({
   amount: z.number().positive(),
-  items: z.array(z.object({
-    id: z.string(),
-    quantity: z.number().positive(),
-  })),
+  items: z.array(
+    z.object({
+      id: z.string(),
+      quantity: z.number().positive(),
+    })
+  ),
   shippingAddress: z.object({
     firstName: z.string(),
     lastName: z.string(),
@@ -43,7 +49,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const products = await storage.getProducts();
       res.json(products);
     } catch (error: any) {
-      res.status(500).json({ message: "Error fetching products: " + error.message });
+      res
+        .status(500)
+        .json({ message: "Error fetching products: " + error.message });
     }
   });
 
@@ -56,21 +64,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json(product);
     } catch (error: any) {
-      res.status(500).json({ message: "Error fetching product: " + error.message });
+      res
+        .status(500)
+        .json({ message: "Error fetching product: " + error.message });
     }
   });
 
   // Create payment intent for Stripe checkout
   app.post("/api/create-payment-intent", async (req, res) => {
     try {
-      const { amount, items, shippingAddress } = createPaymentIntentSchema.parse(req.body);
-      
+      const { amount, items, shippingAddress } =
+        createPaymentIntentSchema.parse(req.body);
+
       // Validate products and calculate total
       let calculatedTotal = 0;
       for (const item of items) {
         const product = await storage.getProduct(item.id);
         if (!product) {
-          return res.status(400).json({ message: `Product ${item.id} not found` });
+          return res
+            .status(400)
+            .json({ message: `Product ${item.id} not found` });
         }
         calculatedTotal += parseFloat(product.price) * item.quantity;
       }
@@ -111,13 +124,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      res.json({ 
+      res.json({
         clientSecret: paymentIntent.client_secret,
-        orderId: order.id 
+        orderId: order.id,
       });
     } catch (error: any) {
       console.error("Payment intent error:", error);
-      res.status(500).json({ message: "Error creating payment intent: " + error.message });
+      res
+        .status(500)
+        .json({ message: "Error creating payment intent: " + error.message });
     }
   });
 
@@ -125,10 +140,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/contact", async (req, res) => {
     try {
       const contactData = contactFormSchema.parse(req.body);
-      
+
       // In a real app, you would send an email or save to database
       console.log("Contact form submission:", contactData);
-      
+
       res.json({ message: "Message sent successfully!" });
     } catch (error: any) {
       res.status(400).json({ message: "Invalid form data: " + error.message });
@@ -137,21 +152,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Stripe webhook handler (for production use)
   app.post("/api/webhook", async (req, res) => {
-    const sig = req.headers['stripe-signature'];
-    
+    const sig = req.headers["stripe-signature"];
+
     try {
       // In production, verify the webhook signature
       const event = req.body;
-      
-      if (event.type === 'payment_intent.succeeded') {
+
+      if (event.type === "payment_intent.succeeded") {
         const paymentIntent = event.data.object;
-        
+
         // Update order status
         const orders = await storage.getProducts(); // This would need to be implemented
         // Find order by stripe payment intent ID and update status
         console.log("Payment succeeded:", paymentIntent.id);
       }
-      
+
       res.json({ received: true });
     } catch (error: any) {
       console.error("Webhook error:", error);
