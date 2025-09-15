@@ -12,6 +12,7 @@ import Products from "@/pages/products";
 import About from "@/pages/about";
 import Contact from "@/pages/contact";
 import Checkout from "@/pages/checkout";
+import Success from "@/pages/success";
 import NotFound from "@/pages/not-found";
 
 // Layout components
@@ -33,6 +34,7 @@ function Router() {
           <Route path="/about" component={About} />
           <Route path="/contact" component={Contact} />
           <Route path="/checkout" component={Checkout} />
+          <Route path="/success" component={Success} />
           <Route component={NotFound} />
         </Switch>
       </main>

@@ -115,12 +115,24 @@ const CheckoutForm = () => {
         variant: "destructive",
       });
     } else {
+      // Store order data for success page
+      const orderData = {
+        items: cartItemsWithProducts.map(item => ({
+          id: item.id,
+          name: item.product.name,
+          price: item.product.price,
+          quantity: item.quantity,
+          total: item.total,
+          image: item.product.image,
+        })),
+        total,
+        paymentIntentId: Date.now().toString(), // Simple order ID for now
+        timestamp: new Date().toISOString(),
+      };
+      
+      localStorage.setItem("pet-cheap-last-order", JSON.stringify(orderData));
       clearCart();
-      toast({
-        title: "Payment Successful",
-        description: "Thank you for your purchase!",
-      });
-      setLocation("/");
+      setLocation("/success");
     }
   };
 

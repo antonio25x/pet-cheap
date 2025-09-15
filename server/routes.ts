@@ -42,6 +42,13 @@ const contactFormSchema = z.object({
   message: z.string().min(1),
 });
 
+const feedbackSchema = z.object({
+  rating: z.number().min(1).max(5),
+  comment: z.string().optional(),
+  orderId: z.string(),
+  timestamp: z.string(),
+});
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Get all products
   app.get("/api/products", async (req, res) => {
@@ -147,6 +154,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "Message sent successfully!" });
     } catch (error: any) {
       res.status(400).json({ message: "Invalid form data: " + error.message });
+    }
+  });
+
+  // Handle feedback submission
+  app.post("/api/feedback", async (req, res) => {
+    try {
+      const feedbackData = feedbackSchema.parse(req.body);
+
+      // In a real app, you would save feedback to database
+      console.log("Feedback submission:", feedbackData);
+
+      res.json({ message: "Feedback received successfully!" });
+    } catch (error: any) {
+      res.status(400).json({ message: "Invalid feedback data: " + error.message });
     }
   });
 
