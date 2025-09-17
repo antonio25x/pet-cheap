@@ -2,8 +2,12 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import Stripe from "stripe";
 import { storage } from "./storage";
-import { z } from "zod";
-import { productIdSchema } from "../shared/validation";
+import {
+  createPaymentIntentSchema,
+  contactFormSchema,
+  feedbackSchema,
+  productIdSchema,
+} from "../shared/validation";
 
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error("Missing required Stripe secret: STRIPE_SECRET_KEY");
@@ -15,39 +19,6 @@ if (!process.env.VITE_STRIPE_PUBLIC_KEY) {
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: "2025-08-27.basil",
-});
-
-const createPaymentIntentSchema = z.object({
-  amount: z.number().positive(),
-  items: z.array(
-    z.object({
-      id: z.string(),
-      quantity: z.number().positive(),
-    })
-  ),
-  shippingAddress: z.object({
-    firstName: z.string(),
-    lastName: z.string(),
-    address: z.string(),
-    city: z.string(),
-    state: z.string(),
-    zipCode: z.string(),
-  }),
-});
-
-const contactFormSchema = z.object({
-  firstName: z.string().min(1),
-  lastName: z.string().min(1),
-  email: z.string().email(),
-  subject: z.string().min(1),
-  message: z.string().min(1),
-});
-
-const feedbackSchema = z.object({
-  rating: z.number().min(1).max(5),
-  comment: z.string().optional(),
-  orderId: z.string(),
-  timestamp: z.string(),
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -64,33 +35,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get single product
-    app.get("/api/products/:id", async (req, res) => {
-      // Validate ID param using shared schema
-      const result = productIdSchema.safeParse(req.params);
-      if (!result.success) {
-        return res.status(400).json({
-          error: "Invalid product ID",
-          details: result.error.errors
-        });
+  app.get("/api/products/:id", async (req, res) => {
+    // Validate ID param using shared schema
+    const result = productIdSchema.safeParse(req.params);
+    if (!result.success) {
+      return res.status(400).json({
+        error: "Invalid product ID",
+        details: result.error.errors,
+      });
+    }
+    try {
+      const product = await storage.getProduct(req.params.id);
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
       }
-      try {
-        const product = await storage.getProduct(req.params.id);
-        if (!product) {
-          return res.status(404).json({ message: "Product not found" });
-        }
-        res.json(product);
-      } catch (error: any) {
-        res
-          .status(500)
-          .json({ message: "Error fetching product: " + error.message });
-      }
-    });
+      res.json(product);
+    } catch (error: any) {
+      res
+        .status(500)
+        .json({ message: "Error fetching product: " + error.message });
+    }
+  });
 
   // Create payment intent for Stripe checkout
   app.post("/api/create-payment-intent", async (req, res) => {
     try {
-      const { amount, items, shippingAddress } =
-        createPaymentIntentSchema.parse(req.body);
+      // Validate request body using safeParse
+      const result = createPaymentIntentSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({
+          error: "Invalid payment intent data",
+          details: result.error.errors,
+        });
+      }
+      const { amount, items, shippingAddress } = result.data;
 
       // Validate products and calculate total
       let calculatedTotal = 0;
@@ -155,7 +133,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Handle contact form submission
   app.post("/api/contact", async (req, res) => {
     try {
-      const contactData = contactFormSchema.parse(req.body);
+      // Validate request body using safeParse
+      const result = contactFormSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({
+          error: "Invalid contact form data",
+          details: result.error.errors,
+        });
+      }
+      const contactData = result.data;
 
       // In a real app, you would send an email or save to database
       console.log("Contact form submission:", contactData);
@@ -169,14 +155,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Handle feedback submission
   app.post("/api/feedback", async (req, res) => {
     try {
-      const feedbackData = feedbackSchema.parse(req.body);
+      // Validate request body using safeParse
+      const result = feedbackSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({
+          error: "Invalid feedback data",
+          details: result.error.errors,
+        });
+      }
+      const feedbackData = result.data;
 
       // In a real app, you would save feedback to database
       console.log("Feedback submission:", feedbackData);
 
       res.json({ message: "Feedback received successfully!" });
     } catch (error: any) {
-      res.status(400).json({ message: "Invalid feedback data: " + error.message });
+      res
+        .status(400)
+        .json({ message: "Invalid feedback data: " + error.message });
     }
   });
 
