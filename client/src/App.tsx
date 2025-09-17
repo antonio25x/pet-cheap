@@ -5,9 +5,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useState } from "react";
 import { CartProvider } from "@/hooks/use-cart";
+import { useAuth } from "@/hooks/useAuth";
 
 // Pages
 import Home from "@/pages/home";
+import Landing from "@/pages/landing";
 import Products from "@/pages/products";
 import About from "@/pages/about";
 import Contact from "@/pages/contact";
@@ -21,6 +23,7 @@ import Footer from "@/components/layout/footer";
 import CartDrawer from "@/components/cart/cart-drawer";
 
 function Router() {
+  const { isAuthenticated, isLoading } = useAuth();
   const [isCartOpen, setIsCartOpen] = useState(false);
 
   return (
@@ -29,12 +32,18 @@ function Router() {
 
       <main className="flex-1">
         <Switch>
-          <Route path="/" component={Home} />
-          <Route path="/products" component={Products} />
-          <Route path="/about" component={About} />
-          <Route path="/contact" component={Contact} />
-          <Route path="/checkout" component={Checkout} />
-          <Route path="/success" component={Success} />
+          {isLoading || !isAuthenticated ? (
+            <Route path="/" component={Landing} />
+          ) : (
+            <>
+              <Route path="/" component={Home} />
+              <Route path="/products" component={Products} />
+              <Route path="/about" component={About} />
+              <Route path="/contact" component={Contact} />
+              <Route path="/checkout" component={Checkout} />
+              <Route path="/success" component={Success} />
+            </>
+          )}
           <Route component={NotFound} />
         </Switch>
       </main>

@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Menu, X, ShoppingCart } from "lucide-react";
+import { Menu, X, ShoppingCart, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/use-cart";
+import { useAuth } from "@/hooks/useAuth";
 
 interface NavigationProps {
   onCartOpen: () => void;
@@ -12,6 +13,7 @@ export default function Navigation({ onCartOpen }: NavigationProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [location] = useLocation();
   const { getTotalItems } = useCart();
+  const { user, isAuthenticated, isLoading } = useAuth();
 
   const navigation = [
     { name: "Home", href: "/" },
@@ -52,22 +54,53 @@ export default function Navigation({ onCartOpen }: NavigationProps) {
             ))}
           </div>
 
-          {/* Cart and Mobile Menu */}
+          {/* Auth, Cart and Mobile Menu */}
           <div className="flex items-center space-x-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onCartOpen}
-              className="relative p-2"
-              data-testid="button-cart"
-            >
-              <ShoppingCart className="h-5 w-5" />
-              {totalItems > 0 && (
-                <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
-                  {totalItems}
-                </span>
-              )}
-            </Button>
+            {!isLoading && (
+              isAuthenticated ? (
+                <>
+                  <span className="hidden sm:inline text-sm text-foreground">
+                    Welcome, {user?.firstName || user?.email}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => window.location.href = "/api/logout"}
+                    className="p-2"
+                    data-testid="button-logout"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span className="hidden sm:inline ml-2">Sign Out</span>
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => window.location.href = "/api/login"}
+                  data-testid="button-login"
+                >
+                  Sign In
+                </Button>
+              )
+            )}
+            
+            {isAuthenticated && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onCartOpen}
+                className="relative p-2"
+                data-testid="button-cart"
+              >
+                <ShoppingCart className="h-5 w-5" />
+                {totalItems > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                    {totalItems}
+                  </span>
+                )}
+              </Button>
+            )}
 
             {/* Mobile Menu Button */}
             <Button
