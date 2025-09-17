@@ -108,11 +108,39 @@ npm start
 
 ## 🧪 Testing
 
-- Unit and integration tests are supported via your IDE (VS Code).
-- Run type checks:
-  ```sh
-  npm run check
-  ```
+
+### API Testing (Supertest + Vitest)
+
+This project uses [Supertest](https://github.com/visionmedia/supertest) and [Vitest](https://vitest.dev/) for API-level tests.
+
+#### Setup
+Supertest and Vitest are already included in the dependencies. No extra setup is needed.
+
+#### Running API Tests
+To run all API tests:
+```sh
+npx vitest run
+```
+Or, for watch mode:
+```sh
+npx vitest
+```
+
+API tests are located in `server/__tests__/`. Example:
+```sh
+npx vitest run server/__tests__/products.test.ts
+```
+
+#### What is tested?
+- API validation logic (e.g., product ID format)
+- Error responses for invalid input
+- Edge cases (e.g., non-existent products)
+
+#### Type Checking
+Run type checks:
+```sh
+npm run check
+```
 
 ---
 

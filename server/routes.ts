@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import Stripe from "stripe";
 import { storage } from "./storage";
 import { z } from "zod";
+import { productIdSchema } from "../shared/validation";
 
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error("Missing required Stripe secret: STRIPE_SECRET_KEY");
@@ -63,19 +64,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get single product
-  app.get("/api/products/:id", async (req, res) => {
-    try {
-      const product = await storage.getProduct(req.params.id);
-      if (!product) {
-        return res.status(404).json({ message: "Product not found" });
+    app.get("/api/products/:id", async (req, res) => {
+      // Validate ID param using shared schema
+      const result = productIdSchema.safeParse(req.params);
+      if (!result.success) {
+        return res.status(400).json({
+          error: "Invalid product ID",
+          details: result.error.errors
+        });
       }
-      res.json(product);
-    } catch (error: any) {
-      res
-        .status(500)
-        .json({ message: "Error fetching product: " + error.message });
-    }
-  });
+      try {
+        const product = await storage.getProduct(req.params.id);
+        if (!product) {
+          return res.status(404).json({ message: "Product not found" });
+        }
+        res.json(product);
+      } catch (error: any) {
+        res
+          .status(500)
+          .json({ message: "Error fetching product: " + error.message });
+      }
+    });
 
   // Create payment intent for Stripe checkout
   app.post("/api/create-payment-intent", async (req, res) => {
