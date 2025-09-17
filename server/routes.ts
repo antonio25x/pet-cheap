@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import Stripe from "stripe";
 import { storage } from "./storage";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 import {
   createPaymentIntentSchema,
   contactFormSchema,
@@ -22,6 +23,20 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup authentication middleware
+  await setupAuth(app);
+
+  // Auth routes and user endpoint
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
   // Get all products
   app.get("/api/products", async (req, res) => {
     try {
@@ -57,8 +72,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create payment intent for Stripe checkout
-  app.post("/api/create-payment-intent", async (req, res) => {
+  // Create payment intent for Stripe checkout (protected route)
+  app.post("/api/create-payment-intent", isAuthenticated, async (req: any, res) => {
     try {
       // Validate request body using safeParse
       const result = createPaymentIntentSchema.safeParse(req.body);
@@ -96,9 +111,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       });
 
-      // Create order record
+      // Create order record with authenticated user
+      const userId = req.user.claims.sub;
       const order = await storage.createOrder({
-        userId: null, // Not implementing user auth for MVP
+        userId: userId,
         total: amount.toString(),
         status: "pending",
         stripePaymentIntentId: paymentIntent.id,
