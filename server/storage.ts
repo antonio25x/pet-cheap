@@ -1,13 +1,19 @@
 import {
+  users,
+  products,
+  orders,
+  orderItems,
   type User,
   type InsertUser,
   type Product,
+  type InsertProduct,
   type Order,
   type InsertOrder,
   type OrderItem,
   type InsertOrderItem,
 } from "@shared/schema";
-import { randomUUID } from "crypto";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -25,24 +31,87 @@ export interface IStorage {
   getOrderItems(orderId: string): Promise<OrderItem[]>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-  private products: Map<string, Product>;
-  private orders: Map<string, Order>;
-  private orderItems: Map<string, OrderItem>;
-
-  constructor() {
-    this.users = new Map();
-    this.products = new Map();
-    this.orders = new Map();
-    this.orderItems = new Map();
-
-    // Initialize with sample products
-    this.initializeProducts();
+// Database implementation using PostgreSQL
+export class DatabaseStorage implements IStorage {
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
   }
 
-  private initializeProducts() {
-    const sampleProducts: Product[] = [
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.username, username));
+    return user || undefined;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(insertUser)
+      .returning();
+    return user;
+  }
+
+  async getProducts(): Promise<Product[]> {
+    return await db.select().from(products);
+  }
+
+  async getProduct(id: string): Promise<Product | undefined> {
+    const [product] = await db
+      .select()
+      .from(products)
+      .where(eq(products.id, id));
+    return product || undefined;
+  }
+
+  async createOrder(order: InsertOrder): Promise<Order> {
+    const [newOrder] = await db
+      .insert(orders)
+      .values(order)
+      .returning();
+    return newOrder;
+  }
+
+  async getOrder(id: string): Promise<Order | undefined> {
+    const [order] = await db
+      .select()
+      .from(orders)
+      .where(eq(orders.id, id));
+    return order || undefined;
+  }
+
+  async updateOrderStatus(id: string, status: string): Promise<void> {
+    await db
+      .update(orders)
+      .set({ status })
+      .where(eq(orders.id, id));
+  }
+
+  async createOrderItem(orderItem: InsertOrderItem): Promise<OrderItem> {
+    const [newOrderItem] = await db
+      .insert(orderItems)
+      .values(orderItem)
+      .returning();
+    return newOrderItem;
+  }
+
+  async getOrderItems(orderId: string): Promise<OrderItem[]> {
+    return await db
+      .select()
+      .from(orderItems)
+      .where(eq(orderItems.orderId, orderId));
+  }
+
+  // Initialize with sample products if needed
+  async initializeProducts(): Promise<void> {
+    const existingProducts = await this.getProducts();
+    if (existingProducts.length > 0) {
+      return; // Products already exist
+    }
+
+    const sampleProducts: InsertProduct[] = [
       {
         id: "premium-dog-food",
         name: "Premium Dog Food",
@@ -67,80 +136,14 @@ export class MemStorage implements IStorage {
       },
     ];
 
-    sampleProducts.forEach((product) => {
-      this.products.set(product.id, product);
-    });
-  }
-
-  async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
-  }
-
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username
-    );
-  }
-
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = {
-      ...insertUser,
-      id,
-      email: insertUser.email || null,
-      stripeCustomerId: null,
-      stripeSubscriptionId: null,
-    };
-    this.users.set(id, user);
-    return user;
-  }
-
-  async getProducts(): Promise<Product[]> {
-    return Array.from(this.products.values());
-  }
-
-  async getProduct(id: string): Promise<Product | undefined> {
-    return this.products.get(id);
-  }
-
-  async createOrder(order: InsertOrder): Promise<Order> {
-    const id = randomUUID();
-    const newOrder: Order = {
-      ...order,
-      id,
-      status: order.status || "pending",
-      userId: order.userId || null,
-      stripePaymentIntentId: order.stripePaymentIntentId || null,
-      createdAt: new Date().toISOString(),
-    };
-    this.orders.set(id, newOrder);
-    return newOrder;
-  }
-
-  async getOrder(id: string): Promise<Order | undefined> {
-    return this.orders.get(id);
-  }
-
-  async updateOrderStatus(id: string, status: string): Promise<void> {
-    const order = this.orders.get(id);
-    if (order) {
-      order.status = status;
-      this.orders.set(id, order);
+    for (const product of sampleProducts) {
+      await db.insert(products).values(product).onConflictDoNothing();
     }
-  }
-
-  async createOrderItem(orderItem: InsertOrderItem): Promise<OrderItem> {
-    const id = randomUUID();
-    const newOrderItem: OrderItem = { ...orderItem, id };
-    this.orderItems.set(id, newOrderItem);
-    return newOrderItem;
-  }
-
-  async getOrderItems(orderId: string): Promise<OrderItem[]> {
-    return Array.from(this.orderItems.values()).filter(
-      (item) => item.orderId === orderId
-    );
   }
 }
 
-export const storage = new MemStorage();
+// Create database storage instance and initialize products
+const databaseStorage = new DatabaseStorage();
+databaseStorage.initializeProducts();
+
+export const storage = databaseStorage;
