@@ -32,18 +32,21 @@ function Router() {
 
       <main className="flex-1">
         <Switch>
+          {/* Home route - Landing for guests, Home for authenticated users */}
           {isLoading || !isAuthenticated ? (
             <Route path="/" component={Landing} />
           ) : (
-            <>
-              <Route path="/" component={Home} />
-              <Route path="/products" component={Products} />
-              <Route path="/about" component={About} />
-              <Route path="/contact" component={Contact} />
-              <Route path="/checkout" component={Checkout} />
-              <Route path="/success" component={Success} />
-            </>
+            <Route path="/" component={Home} />
           )}
+          
+          {/* Public routes - available to everyone */}
+          <Route path="/products" component={Products} />
+          <Route path="/about" component={About} />
+          <Route path="/contact" component={Contact} />
+          <Route path="/checkout" component={Checkout} />
+          <Route path="/success" component={Success} />
+          
+          {/* 404 fallback */}
           <Route component={NotFound} />
         </Switch>
       </main>

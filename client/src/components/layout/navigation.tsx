@@ -85,22 +85,21 @@ export default function Navigation({ onCartOpen }: NavigationProps) {
               )
             )}
             
-            {isAuthenticated && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onCartOpen}
-                className="relative p-2"
-                data-testid="button-cart"
-              >
-                <ShoppingCart className="h-5 w-5" />
-                {totalItems > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
-                    {totalItems}
-                  </span>
-                )}
-              </Button>
-            )}
+            {/* Cart available for all users */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onCartOpen}
+              className="relative p-2"
+              data-testid="button-cart"
+            >
+              <ShoppingCart className="h-5 w-5" />
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                  {totalItems}
+                </span>
+              )}
+            </Button>
 
             {/* Mobile Menu Button */}
             <Button
