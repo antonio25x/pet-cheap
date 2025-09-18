@@ -72,8 +72,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create payment intent for Stripe checkout (protected route)
-  app.post("/api/create-payment-intent", isAuthenticated, async (req: any, res) => {
+  // Create payment intent for Stripe checkout (available to guests and authenticated users)
+  app.post("/api/create-payment-intent", async (req: any, res) => {
     try {
       // Validate request body using safeParse
       const result = createPaymentIntentSchema.safeParse(req.body);
@@ -111,8 +111,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       });
 
-      // Create order record with authenticated user
-      const userId = req.user.claims.sub;
+      // Create order record (support both guests and authenticated users)
+      const userId = req.isAuthenticated() && req.user?.claims?.sub ? req.user.claims.sub : null;
       const order = await storage.createOrder({
         userId: userId,
         total: amount.toString(),
