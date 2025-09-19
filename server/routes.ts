@@ -75,6 +75,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin endpoints for product management
+  // Get all products (admin only - for dashboard)
+  app.get("/api/admin/products", isAdmin, async (req, res) => {
+    try {
+      const products = await storage.getProducts();
+      res.json(products);
+    } catch (error: any) {
+      console.error("Error fetching products for admin:", error);
+      res.status(500).json({ message: "Error fetching products: " + error.message });
+    }
+  });
+
   // Create new product (admin only)
   app.post("/api/admin/products", isAdmin, async (req, res) => {
     try {

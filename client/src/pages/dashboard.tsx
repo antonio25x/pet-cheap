@@ -47,9 +47,9 @@ export default function Dashboard() {
   });
   const { toast } = useToast();
 
-  // Fetch products
+  // Fetch products (use admin endpoint)
   const { data: products = [], isLoading } = useQuery<Product[]>({
-    queryKey: ["/api/products"],
+    queryKey: ["/api/admin/products"],
   });
 
   // Create product mutation
@@ -59,7 +59,7 @@ export default function Dashboard() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/products"] });
       setIsCreateDialogOpen(false);
       resetForm();
       toast({
@@ -83,7 +83,7 @@ export default function Dashboard() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/products"] });
       setEditingProduct(null);
       resetForm();
       toast({
@@ -107,7 +107,7 @@ export default function Dashboard() {
       return response;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/products"] });
       toast({
         title: "Success",
         description: "Product deleted successfully",
