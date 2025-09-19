@@ -7,16 +7,31 @@ describe("Products Page", () => {
 
   it("should add products to cart", () => {
     cy.visit("/products");
+
+    cy.get(
+      "[data-testid='button-add-to-cart-premium-dog-food']"
+    ).scrollIntoView();
+
     cy.get("[data-testid='button-add-to-cart-premium-dog-food']").click();
+
+    cy.scrollTo("top");
+
     cy.get("[data-testid='button-cart']")
       .find("span")
       .contains("1")
       .should("be.visible");
+
+    cy.get("[data-testid='button-add-to-cart-cat-toy-set']").scrollIntoView();
+
     cy.get("[data-testid='button-add-to-cart-cat-toy-set']").click();
+
+    cy.scrollTo("top");
+
     cy.get("[data-testid='button-cart']")
       .find("span")
       .contains("2")
       .should("be.visible");
+
     cy.get("[data-testid='button-cart']").click();
     cy.contains("Premium Cat Food").should("be.visible");
     cy.contains("Interactive Cat Toy").should("be.visible");

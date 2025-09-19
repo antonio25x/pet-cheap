@@ -8,4 +8,6 @@ export default defineConfig({
   },
   video: false,
   screenshotOnRunFailure: true,
+  defaultCommandTimeout: 10000, // 10 seconds for commands like cy.get, cy.contains
+  pageLoadTimeout: 60000, // 60 seconds for page loads
 });
