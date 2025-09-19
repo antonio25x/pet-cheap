@@ -8,7 +8,9 @@
     "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "start": "cross-env NODE_ENV=production node dist/index.js",
     "check": "tsc",
-    "db:push": "drizzle-kit push"
+    "db:push": "drizzle-kit push",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -83,6 +85,9 @@
     "zod-validation-error": "^3.4.0"
   },
   "devDependencies": {
+    "@cypress/code-coverage": "^3.14.6",
+    "@cypress/react": "^9.0.1",
+    "@cypress/webpack-dev-server": "^5.1.2",
     "@replit/vite-plugin-cartographer": "^0.3.0",
     "@replit/vite-plugin-dev-banner": "^0.1.1",
     "@replit/vite-plugin-runtime-error-modal": "^0.0.3",
@@ -101,6 +106,7 @@
     "@vitejs/plugin-react": "^4.3.2",
     "autoprefixer": "^10.4.20",
     "cross-env": "^10.0.0",
+    "cypress": "^15.2.0",
     "drizzle-kit": "^0.30.4",
     "esbuild": "^0.25.0",
     "postcss": "^8.4.47",

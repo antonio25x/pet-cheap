@@ -8,3 +8,6 @@ vite.config.ts.*
 # Ignore environment variable files
 .env
 .env.*
+
+# Ignore all Cypress files
+cypress
