@@ -15,6 +15,7 @@ import About from "@/pages/about";
 import Contact from "@/pages/contact";
 import Checkout from "@/pages/checkout";
 import Success from "@/pages/success";
+import Dashboard from "@/pages/dashboard";
 import NotFound from "@/pages/not-found";
 
 // Layout components
@@ -23,7 +24,7 @@ import Footer from "@/components/layout/footer";
 import CartDrawer from "@/components/cart/cart-drawer";
 
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, isAdmin } = useAuth();
   const [isCartOpen, setIsCartOpen] = useState(false);
 
   return (
@@ -45,6 +46,9 @@ function Router() {
           <Route path="/contact" component={Contact} />
           <Route path="/checkout" component={Checkout} />
           <Route path="/success" component={Success} />
+          
+          {/* Admin-only routes */}
+          {isAdmin && <Route path="/dashboard" component={Dashboard} />}
           
           {/* 404 fallback */}
           <Route component={NotFound} />

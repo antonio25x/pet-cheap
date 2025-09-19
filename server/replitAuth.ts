@@ -160,19 +160,14 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
 // Authorization middleware to check if user has specific role
 export const requireRole = (role: UserRole): RequestHandler => {
   return async (req, res, next) => {
-    // First ensure user is authenticated
-    await new Promise<void>((resolve, reject) => {
-      isAuthenticated(req, res, (err) => {
-        if (err) reject(err);
-        else resolve();
-      });
-    }).catch(() => {
-      return res.status(401).json({ message: "Unauthorized" });
-    });
-
     try {
       // Get user from database to check role
       const user = req.user as any;
+      
+      if (!req.isAuthenticated() || !user?.claims?.sub) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
       const userId = user.claims.sub;
       const dbUser = await storage.getUser(userId);
       

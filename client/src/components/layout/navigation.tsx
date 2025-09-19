@@ -1,26 +1,40 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Menu, X, ShoppingCart, LogOut } from "lucide-react";
+import { Menu, X, ShoppingCart, LogOut, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/use-cart";
 import { useAuth } from "@/hooks/useAuth";
+import type { LucideIcon } from "lucide-react";
 
 interface NavigationProps {
   onCartOpen: () => void;
+}
+
+interface NavigationItem {
+  name: string;
+  href: string;
+  icon?: LucideIcon;
 }
 
 export default function Navigation({ onCartOpen }: NavigationProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [location] = useLocation();
   const { getTotalItems } = useCart();
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading, isAdmin } = useAuth();
 
-  const navigation = [
+  const navigation: NavigationItem[] = [
     { name: "Home", href: "/" },
     { name: "Products", href: "/products" },
     { name: "About", href: "/about" },
     { name: "Contact", href: "/contact" },
   ];
+  
+  // Add dashboard for admin users
+  const adminNavigation: NavigationItem[] = isAdmin 
+    ? [{ name: "Dashboard", href: "/dashboard", icon: LayoutDashboard }]
+    : [];
+  
+  const allNavigation = [...navigation, ...adminNavigation];
 
   const totalItems = getTotalItems();
 
@@ -40,15 +54,16 @@ export default function Navigation({ onCartOpen }: NavigationProps) {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            {navigation.map((item) => (
+            {allNavigation.map((item) => (
               <Link
                 key={item.name}
                 href={item.href}
-                className={`text-foreground hover:text-primary transition-colors duration-200 font-medium ${
+                className={`text-foreground hover:text-primary transition-colors duration-200 font-medium flex items-center gap-1 ${
                   location === item.href ? "text-primary" : ""
                 }`}
                 data-testid={`link-${item.name.toLowerCase()}`}
               >
+                {item.icon && <item.icon className="h-4 w-4" />}
                 {item.name}
               </Link>
             ))}
@@ -122,7 +137,7 @@ export default function Navigation({ onCartOpen }: NavigationProps) {
         {isMobileMenuOpen && (
           <div className="md:hidden border-t border-border">
             <div className="px-2 pt-2 pb-3 space-y-1">
-              {navigation.map((item) => (
+              {allNavigation.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}

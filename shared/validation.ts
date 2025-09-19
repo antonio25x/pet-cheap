@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const productIdSchema = z.object({
-  id: z.string().regex(/^\d+$/, "ID must be a number"),
+  id: z.string().min(1, "ID is required"),
 });
 
 // Add other API validation schemas here for reusability

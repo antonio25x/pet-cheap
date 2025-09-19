@@ -54,11 +54,10 @@ export default function Dashboard() {
 
   // Create product mutation
   const createProductMutation = useMutation({
-    mutationFn: (productData: ProductFormData) =>
-      apiRequest("/api/admin/products", {
-        method: "POST",
-        body: JSON.stringify(productData),
-      }),
+    mutationFn: async (productData: ProductFormData) => {
+      const response = await apiRequest("POST", "/api/admin/products", productData);
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       setIsCreateDialogOpen(false);
@@ -79,11 +78,10 @@ export default function Dashboard() {
 
   // Update product mutation
   const updateProductMutation = useMutation({
-    mutationFn: ({ id, ...productData }: ProductFormData) =>
-      apiRequest(`/api/admin/products/${id}`, {
-        method: "PUT",
-        body: JSON.stringify(productData),
-      }),
+    mutationFn: async ({ id, ...productData }: ProductFormData) => {
+      const response = await apiRequest("PUT", `/api/admin/products/${id}`, productData);
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       setEditingProduct(null);
@@ -104,10 +102,10 @@ export default function Dashboard() {
 
   // Delete product mutation
   const deleteProductMutation = useMutation({
-    mutationFn: (productId: string) =>
-      apiRequest(`/api/admin/products/${productId}`, {
-        method: "DELETE",
-      }),
+    mutationFn: async (productId: string) => {
+      const response = await apiRequest("DELETE", `/api/admin/products/${productId}`);
+      return response;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       toast({
