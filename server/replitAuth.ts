@@ -7,6 +7,7 @@ import type { Express, RequestHandler } from "express";
 import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
+import type { UserRole } from "../shared/schema";
 
 if (!process.env.REPLIT_DOMAINS) {
   throw new Error("Environment variable REPLIT_DOMAINS not provided");
@@ -155,3 +156,37 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
     return;
   }
 };
+
+// Authorization middleware to check if user has specific role
+export const requireRole = (role: UserRole): RequestHandler => {
+  return async (req, res, next) => {
+    // First ensure user is authenticated
+    await new Promise<void>((resolve, reject) => {
+      isAuthenticated(req, res, (err) => {
+        if (err) reject(err);
+        else resolve();
+      });
+    }).catch(() => {
+      return res.status(401).json({ message: "Unauthorized" });
+    });
+
+    try {
+      // Get user from database to check role
+      const user = req.user as any;
+      const userId = user.claims.sub;
+      const dbUser = await storage.getUser(userId);
+      
+      if (!dbUser || dbUser.role !== role) {
+        return res.status(403).json({ message: "Forbidden: Insufficient permissions" });
+      }
+      
+      next();
+    } catch (error) {
+      console.error("Role check error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  };
+};
+
+// Convenience middleware for admin-only routes
+export const isAdmin = requireRole('admin');
