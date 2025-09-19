@@ -1,5 +1,3 @@
-// cypress/e2e/home.cy.ts
-
 describe("Home Page", () => {
   it("should load and display the site title", () => {
     cy.visit("/");
@@ -13,5 +11,16 @@ describe("Home Page", () => {
     cy.contains("Products").should("be.visible");
   });
 
-  // Add more tests for login, cart, etc. as needed
+  it("should open the shopping cart", () => {
+    cy.visit("/");
+    cy.get("[data-testid=button-cart]").click();
+    cy.contains("Your cart is empty").should("be.visible");
+    cy.get("[data-testid=button-continue-shopping]").should("be.visible");
+    cy.get("[data-testid=button-close-cart]").should("be.visible");
+  });
+
+  it("should not have dashboard link when not logged in", () => {
+    cy.visit("/");
+    cy.get("[data-testid=link-dashboard]").should("not.exist");
+  });
 });
