@@ -38,3 +38,16 @@ export const feedbackSchema = z.object({
   orderId: z.string(),
   timestamp: z.string(),
 });
+
+// Product management validation schemas
+export const createProductSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  description: z.string().min(1),
+  price: z.string().regex(/^\d+(\.\d{1,2})?$/, "Price must be a valid decimal"),
+  image: z.string().url(),
+  category: z.string().min(1),
+  inStock: z.number().int().min(0),
+});
+
+export const updateProductSchema = createProductSchema.partial().omit({ id: true });

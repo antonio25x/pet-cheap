@@ -2,12 +2,14 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import Stripe from "stripe";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth, isAuthenticated, isAdmin } from "./replitAuth";
 import {
   createPaymentIntentSchema,
   contactFormSchema,
   feedbackSchema,
   productIdSchema,
+  createProductSchema,
+  updateProductSchema,
 } from "../shared/validation";
 
 if (!process.env.STRIPE_SECRET_KEY) {
@@ -69,6 +71,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res
         .status(500)
         .json({ message: "Error fetching product: " + error.message });
+    }
+  });
+
+  // Admin endpoints for product management
+  // Create new product (admin only)
+  app.post("/api/admin/products", isAdmin, async (req, res) => {
+    try {
+      const result = createProductSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({
+          error: "Invalid product data",
+          details: result.error.errors,
+        });
+      }
+      
+      const product = await storage.createProduct(result.data);
+      res.status(201).json(product);
+    } catch (error: any) {
+      console.error("Error creating product:", error);
+      res.status(500).json({ message: "Error creating product: " + error.message });
+    }
+  });
+
+  // Update product (admin only)
+  app.put("/api/admin/products/:id", isAdmin, async (req, res) => {
+    try {
+      const result = updateProductSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({
+          error: "Invalid product data",
+          details: result.error.errors,
+        });
+      }
+      
+      const product = await storage.updateProduct(req.params.id, result.data);
+      res.json(product);
+    } catch (error: any) {
+      console.error("Error updating product:", error);
+      res.status(500).json({ message: "Error updating product: " + error.message });
+    }
+  });
+
+  // Delete product (admin only)
+  app.delete("/api/admin/products/:id", isAdmin, async (req, res) => {
+    try {
+      await storage.deleteProduct(req.params.id);
+      res.status(204).send();
+    } catch (error: any) {
+      console.error("Error deleting product:", error);
+      res.status(500).json({ message: "Error deleting product: " + error.message });
     }
   });
 
