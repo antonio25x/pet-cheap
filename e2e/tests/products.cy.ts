@@ -1,12 +1,19 @@
 describe("Products Page", () => {
-  it("should load and display products", () => {
-    cy.visit("/products");
+  it("should be able to navigate to products", () => {
+    cy.visit("/");
+
+    cy.get("[data-testid=link-products]").click();
+    cy.url().should("include", "/products");
+
     cy.contains("Products").should("be.visible");
     cy.get("[data-component-name='Card']").should("have.length.gte", 2);
   });
 
   it("should add products to cart", () => {
-    cy.visit("/products");
+    cy.visit("/");
+
+    cy.get("[data-testid=link-products]").click();
+    cy.url().should("include", "/products");
 
     cy.get(
       "[data-testid='button-add-to-cart-premium-dog-food']"
