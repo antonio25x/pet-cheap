@@ -10,4 +10,7 @@ export default defineConfig({
   screenshotOnRunFailure: true,
   defaultCommandTimeout: 10000, // 10 seconds for commands like cy.get, cy.contains
   pageLoadTimeout: 60000, // 60 seconds for page loads
+  scrollBehavior: "center",
+  defaultBrowser: "chrome",
+  retries: { runMode: 2, openMode: 0 }, // Retry failed tests twice in CI (runMode), no retries when running locally (openMode)
 });
