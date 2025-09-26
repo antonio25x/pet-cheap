@@ -5,4 +5,10 @@ export default defineConfig({
     include: ["*/__tests__/**/*.test.ts"],
     setupFiles: ["./vitest.setup.ts"],
   },
+  resolve: {
+    alias: {
+      "@shared": "/shared",
+      "@": "/client/src",
+    },
+  },
 });
