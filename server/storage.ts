@@ -13,8 +13,8 @@ import {
   type OrderItem,
   type InsertOrderItem,
 } from "@shared/schema";
-import { db } from "./db";
 import { eq } from "drizzle-orm";
+import MockStorage from "./mockStorage";
 
 export interface IStorage {
   // User operations - Required for Replit Auth
@@ -24,7 +24,7 @@ export interface IStorage {
   // Product operations - Public access
   getProducts(): Promise<Product[]>;
   getProduct(id: string): Promise<Product | undefined>;
-  
+
   // Product management operations - Admin only
   createProduct(product: InsertProduct): Promise<Product>;
   updateProduct(id: string, product: Partial<InsertProduct>): Promise<Product>;
@@ -39,13 +39,22 @@ export interface IStorage {
 }
 
 // Database implementation using PostgreSQL
+async function getDb() {
+  // dynamic import so tests that use MockStorage don't load server/db (which
+  // requires a real DATABASE_URL)
+  const mod = await import("./db");
+  return mod.db;
+}
+
 export class DatabaseStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
+    const db = await getDb();
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user || undefined;
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
+    const db = await getDb();
     const [user] = await db
       .insert(users)
       .values(userData)
@@ -61,10 +70,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getProducts(): Promise<Product[]> {
+    const db = await getDb();
     return await db.select().from(products);
   }
 
   async getProduct(id: string): Promise<Product | undefined> {
+    const db = await getDb();
     const [product] = await db
       .select()
       .from(products)
@@ -74,14 +85,16 @@ export class DatabaseStorage implements IStorage {
 
   // Product management operations - Admin only
   async createProduct(product: InsertProduct): Promise<Product> {
-    const [newProduct] = await db
-      .insert(products)
-      .values(product)
-      .returning();
+    const db = await getDb();
+    const [newProduct] = await db.insert(products).values(product).returning();
     return newProduct;
   }
 
-  async updateProduct(id: string, productData: Partial<InsertProduct>): Promise<Product> {
+  async updateProduct(
+    id: string,
+    productData: Partial<InsertProduct>
+  ): Promise<Product> {
+    const db = await getDb();
     const [updatedProduct] = await db
       .update(products)
       .set(productData)
@@ -91,35 +104,29 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteProduct(id: string): Promise<void> {
-    await db
-      .delete(products)
-      .where(eq(products.id, id));
+    const db = await getDb();
+    await db.delete(products).where(eq(products.id, id));
   }
 
   async createOrder(order: InsertOrder): Promise<Order> {
-    const [newOrder] = await db
-      .insert(orders)
-      .values(order)
-      .returning();
+    const db = await getDb();
+    const [newOrder] = await db.insert(orders).values(order).returning();
     return newOrder;
   }
 
   async getOrder(id: string): Promise<Order | undefined> {
-    const [order] = await db
-      .select()
-      .from(orders)
-      .where(eq(orders.id, id));
+    const db = await getDb();
+    const [order] = await db.select().from(orders).where(eq(orders.id, id));
     return order || undefined;
   }
 
   async updateOrderStatus(id: string, status: string): Promise<void> {
-    await db
-      .update(orders)
-      .set({ status })
-      .where(eq(orders.id, id));
+    const db = await getDb();
+    await db.update(orders).set({ status }).where(eq(orders.id, id));
   }
 
   async createOrderItem(orderItem: InsertOrderItem): Promise<OrderItem> {
+    const db = await getDb();
     const [newOrderItem] = await db
       .insert(orderItems)
       .values(orderItem)
@@ -128,6 +135,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getOrderItems(orderId: string): Promise<OrderItem[]> {
+    const db = await getDb();
     return await db
       .select()
       .from(orderItems)
@@ -166,14 +174,25 @@ export class DatabaseStorage implements IStorage {
       },
     ];
 
+    const db = await getDb();
     for (const product of sampleProducts) {
       await db.insert(products).values(product).onConflictDoNothing();
     }
   }
 }
 
-// Create database storage instance and initialize products
-const databaseStorage = new DatabaseStorage();
-databaseStorage.initializeProducts();
+// MockStorage is implemented in server/mockStorage.ts
 
-export const storage = databaseStorage;
+// Export the appropriate storage implementation for the environment. Use the
+// mock storage in tests to avoid requiring a real DATABASE_URL.
+let storageImpl: IStorage;
+if (process.env.NODE_ENV === "test") {
+  storageImpl = new MockStorage();
+} else {
+  const databaseStorage = new DatabaseStorage();
+  // initialize products (fire-and-forget)
+  databaseStorage.initializeProducts().catch((e) => console.error(e));
+  storageImpl = databaseStorage;
+}
+
+export const storage = storageImpl;

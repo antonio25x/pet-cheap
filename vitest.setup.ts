@@ -1,4 +1,17 @@
-import "dotenv/config";
+import dotenv from "dotenv";
+import fs from "fs";
+
+// Load environment variables. If a `.env.test` file exists, prefer it so CI
+// runs and local test runs use the committed test config. We load it regardless
+// of NODE_ENV because some test scripts set NODE_ENV to a different value
+// (for example your `vitest` script currently sets NODE_ENV=development).
+const testEnvPath = ".env.test";
+if (fs.existsSync(testEnvPath)) {
+  dotenv.config({ path: testEnvPath });
+} else {
+  // Fallback to default behavior (loads `.env` if present)
+  dotenv.config();
+}
 
 // Polyfill AbortSignal.timeout for Node versions used in the test environment
 // Some dependencies (e.g. openid-client) call AbortSignal.timeout which doesn't
