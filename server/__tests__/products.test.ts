@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll } from "vitest";
 import request from "supertest";
 import express from "express";
 import { registerRoutes } from "../routes";
@@ -6,7 +6,9 @@ import { registerRoutes } from "../routes";
 // Setup Express app for testing
 const app = express();
 app.use(express.json());
-registerRoutes(app);
+beforeAll(async () => {
+  await registerRoutes(app);
+});
 
 describe("GET /api/products/:id validation", () => {
   it("should return 400 for invalid id format", async () => {

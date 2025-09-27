@@ -1,7 +1,11 @@
 import { z } from "zod";
 
 export const productIdSchema = z.object({
-  id: z.string().min(1, "ID is required"),
+  // Require a numeric string for product IDs (tests expect a failure message "ID must be a number")
+  id: z
+    .string()
+    .min(1, "ID is required")
+    .regex(/^[0-9]+$/, { message: "ID must be a number" }),
 });
 
 // Add other API validation schemas here for reusability
@@ -50,4 +54,6 @@ export const createProductSchema = z.object({
   inStock: z.number().int().min(0),
 });
 
-export const updateProductSchema = createProductSchema.partial().omit({ id: true });
+export const updateProductSchema = createProductSchema
+  .partial()
+  .omit({ id: true });

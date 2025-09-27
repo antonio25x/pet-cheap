@@ -1,11 +1,13 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll } from "vitest";
 import request from "supertest";
 import express from "express";
 import { registerRoutes } from "../routes";
 
 const app = express();
 app.use(express.json());
-registerRoutes(app);
+beforeAll(async () => {
+  await registerRoutes(app);
+});
 
 describe("POST /api/feedback API validation", () => {
   it("should return 200 for valid feedback data", async () => {
